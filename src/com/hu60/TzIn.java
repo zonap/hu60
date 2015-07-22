@@ -22,7 +22,9 @@ import android.text.util.Linkify.TransformFilter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -80,7 +82,7 @@ public class TzIn extends Activity {
 		ftname = (TextView) findViewById(R.id.ftname);
 		rcount = (TextView) findViewById(R.id.liulanc);
 		hcount = (TextView) findViewById(R.id.plc);
-
+		
 		ftime = (TextView) findViewById(R.id.fttime);
 
 		fnr = (TextView) findViewById(R.id.ftnr);
@@ -150,6 +152,7 @@ public class TzIn extends Activity {
 					extractMention2Link(fnr);
 					linearLayout.setVisibility(View.VISIBLE);
 					scview.setVisibility(View.VISIBLE);
+					
 					jiazaiing.setVisibility(View.GONE);
 					process.setVisibility(View.GONE);
 					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
@@ -175,6 +178,8 @@ public class TzIn extends Activity {
 					hfList = JsonTools.getHfLists(json);
 					tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
 					hflistview.setAdapter(tzInfoAdapter);
+					setListViewHeightBasedOnChildren(hflistview);
+					scview.smoothScrollTo(0, 0);
 					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -187,7 +192,30 @@ public class TzIn extends Activity {
 		task1.execute(path1);
 
 	}
+	/**
+	* 动态设置ListView的高度
+	* @param listView
+	*/
+	public static void setListViewHeightBasedOnChildren(ListView listView) { 
+	    if(listView == null) return;
 
+	    ListAdapter listAdapter = listView.getAdapter(); 
+	    if (listAdapter == null) { 
+	        // pre-condition 
+	        return; 
+	    } 
+
+	    int totalHeight = 0; 
+	    for (int i = 0; i < listAdapter.getCount(); i++) { 
+	        View listItem = listAdapter.getView(i, null, listView); 
+	        listItem.measure(0, 0); 
+	        totalHeight += listItem.getMeasuredHeight(); 
+	    } 
+
+	    ViewGroup.LayoutParams params = listView.getLayoutParams(); 
+	    params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1)); 
+	    listView.setLayoutParams(params); 
+	}
 	// final Handler h = new Handler() {
 	// @Override
 	// public void handleMessage(Message msg) {

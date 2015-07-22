@@ -47,10 +47,9 @@ public class Main extends FragmentActivity {
 
 		pagerTabStrip = (PagerTabStrip) findViewById(R.id.pagertab);
 		// 设置下划线的颜色
-		pagerTabStrip.setTabIndicatorColor(Color.argb(0,45, 159, 215));
+		pagerTabStrip.setTabIndicatorColor(Color.argb(0, 45, 159, 215));
 		// 设置背景的颜色
-		pagerTabStrip.setBackgroundColor(getResources().getColor(
-				android.R.color.white));
+		pagerTabStrip.setBackgroundColor(getResources().getColor(android.R.color.white));
 
 		// pagerTitleStrip=(PagerTitleStrip) findViewById(R.id.pagertab);
 		// //设置背景的颜色

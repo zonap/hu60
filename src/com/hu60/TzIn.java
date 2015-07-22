@@ -1,40 +1,20 @@
 package com.hu60;
 
-import java.io.File;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-
-import android.R.drawable;
-import android.R.integer;
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
-import android.text.Spanned;
 import android.text.Html.ImageGetter;
+import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.text.util.Linkify;
 import android.text.util.Linkify.MatchFilter;
@@ -42,35 +22,27 @@ import android.text.util.Linkify.TransformFilter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.domain.Defs;
 import com.domain.HfInfoHead;
 import com.domain.HfList;
 import com.domain.TzInfo;
-import com.http.DownLoadImage;
 import com.http.GetPostUtil;
 import com.http.HttpTask;
-import com.http.PictureTask;
 import com.http.HttpTask.HttpTaskHandler;
-import com.hu60.AutoListViewLow.OnRefreshListener;
+import com.http.PictureTask;
 import com.json.JsonTools;
-import com.tools.ScreenUtils;
 import com.tools.TimeChange;
-import com.tools.URLImageGetter;
 
-public class TzIn extends Activity implements OnRefreshListener {
+public class TzIn extends Activity {
 	private TextView ftime, hcount, rcount, ftitle, fnr, ftname;
 	private static final String TAG = "TzIn";
-	private AutoListViewLow hflistview;
+	private ListView hflistview;
 	private HfInfoHead hfInfoHead;
 	// private Button loadBtn;
 	private String tzid, bkid, tznr;
@@ -122,8 +94,7 @@ public class TzIn extends Activity implements OnRefreshListener {
 		Intent i = getIntent();
 		tzid = i.getStringExtra("tzid");
 		bkid = i.getStringExtra("bkid");
-		String path = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=tz&tzid="
-				+ tzid + "&parse=2";
+		String path = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=tz&tzid=" + tzid + "&parse=2";
 		HttpTask task = new HttpTask();
 		task.setTaskHandler(new HttpTaskHandler() {
 			public void taskSuccessful(String json) {
@@ -140,8 +111,7 @@ public class TzIn extends Activity implements OnRefreshListener {
 						public Drawable getDrawable(String source1) {
 							String source = null;
 							try {
-								source = java.net.URLDecoder.decode(source1,
-										"utf-8");
+								source = java.net.URLDecoder.decode(source1, "utf-8");
 								source = "http://133.130.53.62" + source;
 							} catch (UnsupportedEncodingException e1) {
 								// TODO Auto-generated catch block
@@ -149,21 +119,15 @@ public class TzIn extends Activity implements OnRefreshListener {
 							}
 							Log.i("RG", "url---?>>>" + source);
 							try {
-								Drawable drawable = new PictureTask().execute(
-										source).get();
-//								if (drawable.getIntrinsicWidth() > screenwidth-40&&drawable.getIntrinsicWidth() <50) {
-									if (drawable.getIntrinsicWidth() >50) {
-									drawable.setBounds(
-											0,
-											0,
-											screenwidth - 40,
-											drawable.getIntrinsicHeight()
-													* (screenwidth - 40)
-													/ drawable
-															.getIntrinsicWidth());
+								Drawable drawable = new PictureTask().execute(source).get();
+								// if (drawable.getIntrinsicWidth() >
+								// screenwidth-40&&drawable.getIntrinsicWidth()
+								// <50) {
+								if (drawable.getIntrinsicWidth() > 50) {
+									drawable.setBounds(0, 0, screenwidth - 40, drawable.getIntrinsicHeight()
+											* (screenwidth - 40) / drawable.getIntrinsicWidth());
 								} else {
-									drawable.setBounds(0, 0,
-											drawable.getIntrinsicWidth(),
+									drawable.setBounds(0, 0, drawable.getIntrinsicWidth(),
 											drawable.getIntrinsicHeight());
 
 								}
@@ -199,19 +163,17 @@ public class TzIn extends Activity implements OnRefreshListener {
 		});
 		task.execute(path);
 
-		hflistview = (AutoListViewLow) findViewById(R.id.hflistview);
+		hflistview = (ListView) findViewById(R.id.hflistview);
 
-		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid="
-				+ tzid + "&parse=2&order=asc&offset=" + offset + "&size=5";
+		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
+				+ "&parse=2&order=asc&offset=" + offset + "&size=5";
 		HttpTask task1 = new HttpTask();
-		hflistview.setOnRefreshListener(this);
 		task1.setTaskHandler(new HttpTaskHandler() {
 			public void taskSuccessful(String json) {
 				try {
 					hfInfoHead = JsonTools.getHfInfoHead(json);
 					hfList = JsonTools.getHfLists(json);
-					tzInfoAdapter = new TzInfoAdapter(hfList,
-							getApplicationContext());
+					tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
 					hflistview.setAdapter(tzInfoAdapter);
 					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
 				} catch (Exception e) {
@@ -279,8 +241,7 @@ public class TzIn extends Activity implements OnRefreshListener {
 		v.setAutoLinkMask(0);
 
 		Pattern mentionsPattern = Pattern.compile("@(\\w+?)(?=\\W|$)(.)");
-		String mentionsScheme = String.format("%s/?%s=", Defs.MENTIONS_SCHEMA,
-				Defs.PARAM_UID);
+		String mentionsScheme = String.format("%s/?%s=", Defs.MENTIONS_SCHEMA, Defs.PARAM_UID);
 		Linkify.addLinks(v, mentionsPattern, mentionsScheme, new MatchFilter() {
 
 			@Override
@@ -296,12 +257,6 @@ public class TzIn extends Activity implements OnRefreshListener {
 				return match.group(1);
 			}
 		});
-	}
-
-	@Override
-	public void onRefresh() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

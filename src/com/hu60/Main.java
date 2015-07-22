@@ -3,12 +3,10 @@ package com.hu60;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -16,21 +14,10 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.domain.ChatList;
-import com.domain.TzList;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
-import com.http.HttpTask;
-import com.http.HttpTask.HttpTaskHandler;
-import com.json.JsonTools;
 
 public class Main extends FragmentActivity {
 	private Bkfrag bkfrag;
@@ -43,13 +30,11 @@ public class Main extends FragmentActivity {
 
 	private PagerTitleStrip pagerTitleStrip;
 	private ListView lv1;
-	private PullToRefreshListView lv;
 	private MyAdapter adapter;
 	private static final String TAG = "Main";
 	private Handler mHandle, mHandler1;
 	private ViewPager vp;
 	private ChatListAdapter chatListAdapter;
-	private ViewPagerAdapter vpAdater;
 	private List<View> views;
 	private TextView[] texts;
 	private int[] ids = { R.id.textView1, R.id.textView2, R.id.textView3 };

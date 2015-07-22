@@ -1,0 +1,21 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Main" >
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#CCCCCC" >
+
+        <!-- 这里可以把PagerTabStrip替换成PagerTitleStrip看看效果有何不同 -->
+
+        <android.support.v4.view.PagerTabStrip
+            android:id="@+id/pagertab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </android.support.v4.view.ViewPager>
+
+</RelativeLayout>

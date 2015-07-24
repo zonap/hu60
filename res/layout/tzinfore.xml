@@ -143,15 +143,47 @@
                     android:textSize="17sp" />
             </LinearLayout>
 
-            <ListView
+            <com.tools.MyListView
                 android:id="@+id/hflistview"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:cacheColorHint="#00000000"
                 android:dividerHeight="1dip" />
+
+            <TextView
+                android:id="@+id/withoutmoretips"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFCCFF"
+                android:gravity="center_horizontal"
+                android:padding="10dp"
+                android:text="没有更多评论了"
+                android:textColor="#009983"
+                android:textSize="15sp"
+                android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/progressBar2"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buuju"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/jiazaiing2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/progressBar2"
+        android:layout_centerHorizontal="true"
+        android:text="评论加载中"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progressBar1"

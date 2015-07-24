@@ -39,12 +39,13 @@ import com.http.HttpTask;
 import com.http.HttpTask.HttpTaskHandler;
 import com.http.PictureTask;
 import com.json.JsonTools;
+import com.tools.MyListView;
 import com.tools.TimeChange;
 
 public class TzIn extends Activity {
 	private TextView ftime, hcount, rcount, ftitle, fnr, ftname;
 	private static final String TAG = "TzIn";
-	private ListView hflistview;
+	private MyListView hflistview;
 	private HfInfoHead hfInfoHead;
 	// private Button loadBtn;
 	private String tzid, bkid, tznr;
@@ -56,8 +57,8 @@ public class TzIn extends Activity {
 	ImageGetter imgGetter;
 	private int screenwidth;
 	private int screenheight;
-	private ProgressBar process;
-	private TextView jiazaiing;
+	private ProgressBar process,process2;
+	private TextView jiazaiing,jiazaiing2,withoutmoretips;
 	private ScrollView scview;
 	private LinearLayout linearLayout;
 
@@ -78,6 +79,9 @@ public class TzIn extends Activity {
 		linearLayout = (LinearLayout) findViewById(R.id.buju1);
 		process = (ProgressBar) findViewById(R.id.progressBar1);
 		jiazaiing = (TextView) findViewById(R.id.jiazaiing);
+		process2=(ProgressBar) findViewById(R.id.progressBar2);
+		jiazaiing2=(TextView) findViewById(R.id.jiazaiing2);
+		withoutmoretips=(TextView) findViewById(R.id.withoutmoretips);
 		ftitle = (TextView) findViewById(R.id.fttitile);
 		ftname = (TextView) findViewById(R.id.ftname);
 		rcount = (TextView) findViewById(R.id.liulanc);
@@ -152,7 +156,8 @@ public class TzIn extends Activity {
 					extractMention2Link(fnr);
 					linearLayout.setVisibility(View.VISIBLE);
 					scview.setVisibility(View.VISIBLE);
-					
+					jiazaiing2.setVisibility(View.VISIBLE);
+					process2.setVisibility(View.VISIBLE);
 					jiazaiing.setVisibility(View.GONE);
 					process.setVisibility(View.GONE);
 					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
@@ -166,7 +171,7 @@ public class TzIn extends Activity {
 		});
 		task.execute(path);
 
-		hflistview = (ListView) findViewById(R.id.hflistview);
+		hflistview = (MyListView) findViewById(R.id.hflistview);
 
 		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
 				+ "&parse=2&order=asc&offset=" + offset + "&size=5";
@@ -176,10 +181,15 @@ public class TzIn extends Activity {
 				try {
 					hfInfoHead = JsonTools.getHfInfoHead(json);
 					hfList = JsonTools.getHfLists(json);
+					if (hfList.size()==0) {
+						withoutmoretips.setVisibility(View.VISIBLE);
+					}
 					tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
 					hflistview.setAdapter(tzInfoAdapter);
-					setListViewHeightBasedOnChildren(hflistview);
-					scview.smoothScrollTo(0, 0);
+					process2.setVisibility(View.GONE);
+					jiazaiing2.setVisibility(View.GONE);
+//					setListViewHeightBasedOnChildren(hflistview);
+//					scview.smoothScrollTo(0, 0);
 					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
 				} catch (Exception e) {
 					e.printStackTrace();

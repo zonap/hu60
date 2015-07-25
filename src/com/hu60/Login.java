@@ -3,7 +3,14 @@ package com.hu60;
 import java.io.UnsupportedEncodingException;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,6 +28,25 @@ public class Login extends Activity implements OnClickListener {
 	private Button logiBtn;
 	int n = 0;
 	String s;
+	private NotificationManager notificationManager;// 提醒用户网络异常
+	private ConnectivityManager cmanager;
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			// 提醒用户网络异常 2g/3g?
+			NetworkInfo mobileInfo = cmanager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			NetworkInfo wifiInfo = cmanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (!mobileInfo.isConnected() && !wifiInfo.isConnected()) {
+				Notification.Builder builder = new Notification.Builder(Login.this);
+				builder.setContentTitle("提示信息");
+				builder.setContentText("网络连接不可用");
+				builder.setSmallIcon(R.drawable.ic_launcher);
+				notificationManager.notify(1001, builder.build());
+			}
+		}
+	};
 
 	public Login() {
 		// TODO Auto-generated constructor stub
@@ -31,6 +57,8 @@ public class Login extends Activity implements OnClickListener {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
+		cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		etName = (EditText) findViewById(R.id.editText1);
 		etPw = (EditText) findViewById(R.id.editText2);
 		logiBtn = (Button) findViewById(R.id.button1);
@@ -49,6 +77,26 @@ public class Login extends Activity implements OnClickListener {
 
 	}
 
+	// 注册广播
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+		registerReceiver(receiver, filter);
+	}
+
+	// 卸载广播
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		if (receiver != null) {
+			unregisterReceiver(receiver);
+		}
+	}
+
 	@Override
 	protected void onStart() {
 		// TODO Auto-generated method stub
@@ -62,8 +110,7 @@ public class Login extends Activity implements OnClickListener {
 		logiBtn.setClickable(false);
 		String name = null, pw = null;
 		try {
-			name = java.net.URLEncoder.encode(etName.getText().toString(),
-					"utf-8");
+			name = java.net.URLEncoder.encode(etName.getText().toString(), "utf-8");
 			pw = java.net.URLEncoder.encode(etPw.getText().toString(), "utf-8");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -74,16 +121,14 @@ public class Login extends Activity implements OnClickListener {
 				try {
 					User user = JsonTools.getUser(json);
 					if (user.getErrmsg().equals("登陆成功")) {
-						Toast.makeText(Login.this, "陈宫", Toast.LENGTH_SHORT)
-								.show();
+						Toast.makeText(Login.this, "陈宫", Toast.LENGTH_SHORT).show();
 						Intent i = new Intent(Login.this, Main.class);
 						Bundle mBundle = new Bundle();
 						mBundle.putSerializable("account", user);
 						i.putExtras(mBundle);
 						startActivity(i);
 					} else {
-						Toast.makeText(Login.this, "失败", Toast.LENGTH_SHORT)
-								.show();
+						Toast.makeText(Login.this, "失败", Toast.LENGTH_SHORT).show();
 						logiBtn.setClickable(true);
 					}
 
@@ -95,8 +140,7 @@ public class Login extends Activity implements OnClickListener {
 			public void taskFailed() {
 			}
 		});
-		task.execute("http://133.130.53.62/wap/0wap/m.php/api.user.php?type=login&name="
-				+ name + "&pass=" + pw);
+		task.execute("http://133.130.53.62/wap/0wap/m.php/api.user.php?type=login&name=" + name + "&pass=" + pw);
 	}
 
 }

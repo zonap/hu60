@@ -3,8 +3,15 @@ package com.hu60;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -38,11 +45,31 @@ public class Main extends FragmentActivity {
 	private List<View> views;
 	private TextView[] texts;
 	private int[] ids = { R.id.textView1, R.id.textView2, R.id.textView3 };
+	private NotificationManager notificationManager;// 提醒用户网络异常
+	private ConnectivityManager cmanager;
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			// 提醒用户网络异常 2g/3g?
+			NetworkInfo mobileInfo=cmanager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			NetworkInfo wifiInfo =cmanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (!mobileInfo.isConnected()&&!wifiInfo.isConnected()) {
+				Notification.Builder builder=new Notification.Builder(Main.this);
+				builder.setContentTitle("提示信息");
+				builder.setContentText("网络连接不可用");
+				builder.setSmallIcon(R.drawable.ic_launcher);
+				notificationManager.notify(1001, builder.build());
+			}
+		}
+	};
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		vp = (ViewPager) findViewById(R.id.vp);
 
 		pagerTabStrip = (PagerTabStrip) findViewById(R.id.pagertab);
@@ -95,7 +122,25 @@ public class Main extends FragmentActivity {
 		}
 
 	}
+	// 注册广播
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+		registerReceiver(receiver, filter);
+	}
 
+	// 卸载广播
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		if (receiver != null) {
+			unregisterReceiver(receiver);
+		}
+	}
 	// initView();
 	// initText();
 	// }

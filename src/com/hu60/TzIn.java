@@ -6,9 +6,28 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.domain.Defs;
+import com.domain.HfInfoHead;
+import com.domain.HfList;
+import com.domain.TzInfo;
+import com.http.GetPostUtil;
+import com.http.HttpTask;
+import com.http.HttpTask.HttpTaskHandler;
+import com.http.PictureTask;
+import com.json.JsonTools;
+import com.tools.MyListView;
+import com.tools.TimeChange;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,27 +41,13 @@ import android.text.util.Linkify.TransformFilter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.domain.Defs;
-import com.domain.HfInfoHead;
-import com.domain.HfList;
-import com.domain.TzInfo;
-import com.http.GetPostUtil;
-import com.http.HttpTask;
-import com.http.HttpTask.HttpTaskHandler;
-import com.http.PictureTask;
-import com.json.JsonTools;
-import com.tools.MyListView;
-import com.tools.TimeChange;
-
-public class TzIn extends Activity {
+public class TzIn extends Activity   {
 	private TextView ftime, hcount, rcount, ftitle, fnr, ftname;
 	private static final String TAG = "TzIn";
 	private MyListView hflistview;
@@ -57,11 +62,29 @@ public class TzIn extends Activity {
 	ImageGetter imgGetter;
 	private int screenwidth;
 	private int screenheight;
-	private ProgressBar process,process2;
-	private TextView jiazaiing,jiazaiing2,withoutmoretips;
+	private ProgressBar process, process2;
+	private TextView jiazaiing, jiazaiing2, withoutmoretips;
 	private ScrollView scview;
 	private LinearLayout linearLayout;
+	private NotificationManager notificationManager;// 提醒用户网络异常
+	private ConnectivityManager cmanager;
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			// 提醒用户网络异常 2g/3g?
+			NetworkInfo mobileInfo=cmanager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			NetworkInfo wifiInfo =cmanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (!mobileInfo.isConnected()&&!wifiInfo.isConnected()) {
+				Notification.Builder builder=new Notification.Builder(TzIn.this);
+				builder.setContentTitle("提示信息");
+				builder.setContentText("网络连接不可用");
+				builder.setSmallIcon(R.drawable.ic_launcher);
+				notificationManager.notify(1001, builder.build());
+			}
+		}
+	};
 	public TzIn() {
 		// TODO Auto-generated constructor stub
 	}
@@ -71,6 +94,8 @@ public class TzIn extends Activity {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.tzinfore);
+		cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		DisplayMetrics mDisplayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
 		screenwidth = mDisplayMetrics.widthPixels;
@@ -79,14 +104,22 @@ public class TzIn extends Activity {
 		linearLayout = (LinearLayout) findViewById(R.id.buju1);
 		process = (ProgressBar) findViewById(R.id.progressBar1);
 		jiazaiing = (TextView) findViewById(R.id.jiazaiing);
-		process2=(ProgressBar) findViewById(R.id.progressBar2);
-		jiazaiing2=(TextView) findViewById(R.id.jiazaiing2);
-		withoutmoretips=(TextView) findViewById(R.id.withoutmoretips);
+		process2 = (ProgressBar) findViewById(R.id.progressBar2);
+		jiazaiing2 = (TextView) findViewById(R.id.jiazaiing2);
+		withoutmoretips = (TextView) findViewById(R.id.withoutmoretips);
+		withoutmoretips.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				hfInfoHead.getSize();
+			}
+		});
 		ftitle = (TextView) findViewById(R.id.fttitile);
 		ftname = (TextView) findViewById(R.id.ftname);
 		rcount = (TextView) findViewById(R.id.liulanc);
 		hcount = (TextView) findViewById(R.id.plc);
-		
+
 		ftime = (TextView) findViewById(R.id.fttime);
 
 		fnr = (TextView) findViewById(R.id.ftnr);
@@ -114,21 +147,25 @@ public class TzIn extends Activity {
 					ftime.setText(TimeChange.tc(tzInfo.getFttime()));
 					String html = tzInfo.getNr();
 					imgGetter = new Html.ImageGetter() {
+						@SuppressLint("NewApi")
 						public Drawable getDrawable(String source1) {
 							String source = null;
 							try {
 								source = java.net.URLDecoder.decode(source1, "utf-8");
-								source = "http://133.130.53.62" + source;
+								String s=source.substring(0, 4);
+								if (!s.equals("http")) {
+									source = "http://133.130.53.62" + source;
+								}
+								
 							} catch (UnsupportedEncodingException e1) {
-								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
 							Log.i("RG", "url---?>>>" + source);
 							try {
 								Drawable drawable = new PictureTask().execute(source).get();
-								// if (drawable.getIntrinsicWidth() >
-								// screenwidth-40&&drawable.getIntrinsicWidth()
-								// <50) {
+								if (drawable==null) {
+									drawable=getResources().getDrawable(R.drawable.imagegetdefeat);
+								}
 								if (drawable.getIntrinsicWidth() > 50) {
 									drawable.setBounds(0, 0, screenwidth - 40, drawable.getIntrinsicHeight()
 											* (screenwidth - 40) / drawable.getIntrinsicWidth());
@@ -156,6 +193,7 @@ public class TzIn extends Activity {
 					extractMention2Link(fnr);
 					linearLayout.setVisibility(View.VISIBLE);
 					scview.setVisibility(View.VISIBLE);
+					scview.smoothScrollTo(0, 0);
 					jiazaiing2.setVisibility(View.VISIBLE);
 					process2.setVisibility(View.VISIBLE);
 					jiazaiing.setVisibility(View.GONE);
@@ -172,7 +210,6 @@ public class TzIn extends Activity {
 		task.execute(path);
 
 		hflistview = (MyListView) findViewById(R.id.hflistview);
-
 		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
 				+ "&parse=2&order=asc&offset=" + offset + "&size=5";
 		HttpTask task1 = new HttpTask();
@@ -181,16 +218,14 @@ public class TzIn extends Activity {
 				try {
 					hfInfoHead = JsonTools.getHfInfoHead(json);
 					hfList = JsonTools.getHfLists(json);
-					if (hfList.size()==0) {
+					if (hfList.size() == 0) {
 						withoutmoretips.setVisibility(View.VISIBLE);
 					}
 					tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
 					hflistview.setAdapter(tzInfoAdapter);
+					scview.smoothScrollTo(0, 0);
 					process2.setVisibility(View.GONE);
 					jiazaiing2.setVisibility(View.GONE);
-//					setListViewHeightBasedOnChildren(hflistview);
-//					scview.smoothScrollTo(0, 0);
-					// fnr.setMovementMethod(LinkMovementMethod.getInstance());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -200,81 +235,106 @@ public class TzIn extends Activity {
 			}
 		});
 		task1.execute(path1);
-
 	}
-	/**
-	* 动态设置ListView的高度
-	* @param listView
-	*/
-	public static void setListViewHeightBasedOnChildren(ListView listView) { 
-	    if(listView == null) return;
-
-	    ListAdapter listAdapter = listView.getAdapter(); 
-	    if (listAdapter == null) { 
-	        // pre-condition 
-	        return; 
-	    } 
-
-	    int totalHeight = 0; 
-	    for (int i = 0; i < listAdapter.getCount(); i++) { 
-	        View listItem = listAdapter.getView(i, null, listView); 
-	        listItem.measure(0, 0); 
-	        totalHeight += listItem.getMeasuredHeight(); 
-	    } 
-
-	    ViewGroup.LayoutParams params = listView.getLayoutParams(); 
-	    params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1)); 
-	    listView.setLayoutParams(params); 
+	// 注册广播
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+		registerReceiver(receiver, filter);
 	}
-	// final Handler h = new Handler() {
-	// @Override
-	// public void handleMessage(Message msg) {
-	// if (msg.what == 0x123) {
-	// // show.setText(msg.obj.toString());
-	// editText.setText("");
-	// Toast.makeText(getApplicationContext(), msg.obj.toString(),
-	// Toast.LENGTH_SHORT).show();
-	// }
-	// }
-	// };
 
-	/*
-	 * @Override public void onClick(View v) { // TODO Auto-generated method
-	 * stub switch (v.getId()) { case R.id.loadBtn: final String path1 =
-	 * "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid +
-	 * "&parse=2&order=asc&offset=" + offset + "&size=5"; HttpTask task1 = new
-	 * HttpTask(); task1.setTaskHandler(new HttpTaskHandler() { public void
-	 * taskSuccessful(String json) { try { hfInfoHead =
-	 * JsonTools.getHfInfoHead(json); //
-	 * fnr.setMovementMethod(LinkMovementMethod.getInstance()); if
-	 * (hfInfoHead.getCount().equals( String.valueOf(hfList.size()))) {
-	 * Toast.makeText(getApplicationContext(), "没有更多回复了",
-	 * Toast.LENGTH_SHORT).show(); } else { offset += 5; // String path1 = //
-	 * "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" // + s +
-	 * "&parse=2&order=asc&offset=" + offset + // "&size=5"; HttpTask task12 =
-	 * new HttpTask(); task12.setTaskHandler(new HttpTaskHandler() { public void
-	 * taskSuccessful(String json) { try { hfInfoHead = JsonTools
-	 * .getHfInfoHead(json); List<HfList> hfList1 = JsonTools .getHfLists(json);
-	 * hfList.addAll(hfList.size(), hfList1);
-	 * tzInfoAdapter.notifyDataSetChanged(); //
-	 * fnr.setMovementMethod(LinkMovementMethod.getInstance()); } catch
-	 * (Exception e) { e.printStackTrace(); } }
-	 * 
-	 * public void taskFailed() { } }); task12.execute(path1); } } catch
-	 * (Exception e) { e.printStackTrace(); } }
-	 * 
-	 * public void taskFailed() { } }); task1.execute(path1);
-	 * 
-	 * break; case R.id.hfbtn: try { tznr = java.net.URLEncoder.encode(
-	 * editText.getText().toString(), "utf-8"); } catch
-	 * (UnsupportedEncodingException e) { // TODO Auto-generated catch block
-	 * e.printStackTrace(); } if (tznr.equals("")) { Toast.makeText(this,
-	 * "回复不能为空", Toast.LENGTH_SHORT).show(); } else { new Thread( new
-	 * AccessNetwork( "POST", "http://133.130.53.62/wap/read.php?id=bbs_xiehf",
-	 * "tzid=" + tzid + "&bkid=" + bkid +
-	 * "&sid=1zed8Kg5izHg5mm-RW9VcNciMAAA&nr=" + tznr +
-	 * "&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D", h)).start(); } break; } }
-	 */
+	// 卸载广播
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		if (receiver != null) {
+			unregisterReceiver(receiver);
+		}
+	}
+
+//	final Handler h = new Handler() {
+//		@Override
+//		public void handleMessage(Message msg) {
+//			if (msg.what == 0x123) {
+//				// show.setText(msg.obj.toString());
+//				editText.setText("");
+//				Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
+//			}
+//		}
+//	};
+//
+//	@Override
+//	public void onClick(View v) {
+//		switch (v.getId()) {
+//		case R.id.loadBtn:
+//			final String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
+//					+ "&parse=2&order=asc&offset=" + offset + "&size=5";
+//			HttpTask task1 = new HttpTask();
+//			task1.setTaskHandler(new HttpTaskHandler() {
+//				public void taskSuccessful(String json) {
+//					try {
+//						hfInfoHead = JsonTools.getHfInfoHead(json);
+//						// fnr.setMovementMethod(LinkMovementMethod.getInstance());
+//						if (hfInfoHead.getCount().equals(String.valueOf(hfList.size()))) {
+//							Toast.makeText(getApplicationContext(), "没有更多回复了", Toast.LENGTH_SHORT).show();
+//						} else {
+//							offset += 5; //
+//							String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + s
+//									+ "&parse=2&order=asc&offset=" + offset + "&size=5";
+//							HttpTask task12 = new HttpTask();
+//							task12.setTaskHandler(new HttpTaskHandler() {
+//								public void taskSuccessful(String json) {
+//									try {
+//										hfInfoHead = JsonTools.getHfInfoHead(json);
+//										List<HfList> hfList1 = JsonTools.getHfLists(json);
+//										hfList.addAll(hfList.size(), hfList1);
+//										tzInfoAdapter.notifyDataSetChanged();
+//										// fnr.setMovementMethod(LinkMovementMethod.getInstance());
+//									} catch (Exception e) {
+//										e.printStackTrace();
+//									}
+//								}
+//
+//								public void taskFailed() {
+//
+//								}
+//							});
+//							task12.execute(path1);
+//						}
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//
+//				public void taskFailed() {
+//				}
+//			});
+//			task1.execute(path1);
+//
+//			break;
+//		case R.id.hfbtn:
+//			try {
+//				tznr = java.net.URLEncoder.encode(editText.getText().toString(), "utf-8");
+//			} catch (UnsupportedEncodingException e) { // TODO Auto-generated
+//														// catch block
+//				e.printStackTrace();
+//			}
+//			if (tznr.equals("")) {
+//				Toast.makeText(this, "回复不能为空", Toast.LENGTH_SHORT).show();
+//			} else {
+//				new Thread(new AccessNetwork("POST", "http://133.130.53.62/wap/read.php?id=bbs_xiehf",
+//						"tzid=" + tzid + "&bkid=" + bkid + "&sid=1zed8Kg5izHg5mm-RW9VcNciMAAA&nr=" + tznr
+//								+ "&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D",
+//						h)).start();
+//			}
+//			break;
+//		}
+//	}
+
 	public static void extractMention2Link(TextView v) {
 		v.setAutoLinkMask(0);
 

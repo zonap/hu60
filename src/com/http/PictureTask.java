@@ -3,6 +3,7 @@ package com.http;
 import java.net.URL;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -33,16 +34,18 @@ public class PictureTask extends AsyncTask<String, Void, Drawable> {
 		URL url;
 		try {
 			url = new URL(params[0]);
-			Log.i("RG", "url---?>>>" + url);
-			drawable = Drawable.createFromStream(url.openStream(), ""); // 获取网路图片
+			Log.i("RG", "url--->>>" + url);
+			drawable = Drawable.createFromStream(url.openStream(), "");
+			// 获取网路图片
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-//		drawable.setBounds(0, 0, ScreenUtils.getScreenWidth(context),
-//				drawable.getIntrinsicHeight() / drawable.getIntrinsicWidth()
-//						* ScreenUtils.getScreenWidth(context));
-//		drawable.setBounds(0, 0, 200, drawable.getIntrinsicHeight()*200/drawable.getIntrinsicWidth());
+		// drawable.setBounds(0, 0, ScreenUtils.getScreenWidth(context),
+		// drawable.getIntrinsicHeight() / drawable.getIntrinsicWidth()
+		// * ScreenUtils.getScreenWidth(context));
+		// drawable.setBounds(0, 0, 200,
+		// drawable.getIntrinsicHeight()*200/drawable.getIntrinsicWidth());
 		Log.i("RG", "url---?>>>" + url);
 		return drawable;
 	}

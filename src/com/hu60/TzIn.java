@@ -80,7 +80,7 @@ public class TzIn extends Activity   {
 				Notification.Builder builder=new Notification.Builder(TzIn.this);
 				builder.setContentTitle("提示信息");
 				builder.setContentText("网络连接不可用");
-				builder.setSmallIcon(R.drawable.ic_launcher);
+				builder.setSmallIcon(R.drawable.netfail);
 				notificationManager.notify(1001, builder.build());
 			}
 		}

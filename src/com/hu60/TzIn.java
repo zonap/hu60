@@ -47,7 +47,7 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-public class TzIn extends Activity   {
+public class TzIn extends Activity {
 	private TextView ftime, hcount, rcount, ftitle, fnr, ftname;
 	private static final String TAG = "TzIn";
 	private MyListView hflistview;
@@ -61,7 +61,6 @@ public class TzIn extends Activity   {
 	// private Button hfbtn;
 	ImageGetter imgGetter;
 	private int screenwidth;
-	private int screenheight;
 	private ProgressBar process, process2;
 	private TextView jiazaiing, jiazaiing2, withoutmoretips;
 	private ScrollView scview;
@@ -74,10 +73,10 @@ public class TzIn extends Activity   {
 		public void onReceive(Context context, Intent intent) {
 			// TODO Auto-generated method stub
 			// 提醒用户网络异常 2g/3g?
-			NetworkInfo mobileInfo=cmanager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-			NetworkInfo wifiInfo =cmanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-			if (!mobileInfo.isConnected()&&!wifiInfo.isConnected()) {
-				Notification.Builder builder=new Notification.Builder(TzIn.this);
+			NetworkInfo mobileInfo = cmanager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+			NetworkInfo wifiInfo = cmanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (!mobileInfo.isConnected() && !wifiInfo.isConnected()) {
+				Notification.Builder builder = new Notification.Builder(TzIn.this);
 				builder.setContentTitle("提示信息");
 				builder.setContentText("网络连接不可用");
 				builder.setSmallIcon(R.drawable.netfail);
@@ -85,6 +84,7 @@ public class TzIn extends Activity   {
 			}
 		}
 	};
+
 	public TzIn() {
 		// TODO Auto-generated constructor stub
 	}
@@ -95,11 +95,10 @@ public class TzIn extends Activity   {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.tzinfore);
 		cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		DisplayMetrics mDisplayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
 		screenwidth = mDisplayMetrics.widthPixels;
-		screenheight = mDisplayMetrics.heightPixels;
 		scview = (ScrollView) findViewById(R.id.buuju);
 		linearLayout = (LinearLayout) findViewById(R.id.buju1);
 		process = (ProgressBar) findViewById(R.id.progressBar1);
@@ -111,8 +110,42 @@ public class TzIn extends Activity   {
 
 			@Override
 			public void onClick(View v) {
+				withoutmoretips.setText("加载中");
 				// TODO Auto-generated method stub
-				hfInfoHead.getSize();
+				if (offset == 0) {
+					offset += 3;
+				} else
+					offset += 10;
+				String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
+						+ "&parse=2&order=asc&offset=" + offset + "&size=10";
+				Log.i("path", path1);
+				HttpTask task1 = new HttpTask();
+				task1.setTaskHandler(new HttpTaskHandler() {
+					public void taskSuccessful(String json) {
+						try {
+							hfInfoHead = JsonTools.getHfInfoHead(json);
+							List<HfList> hfList1 = JsonTools.getHfLists(json);
+							tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
+							hfList.addAll(hfList.size(), hfList1);
+							tzInfoAdapter.notifyDataSetChanged();
+							hflistview.setAdapter(tzInfoAdapter);
+							Log.i("pinglun", hfList.toString());
+							withoutmoretips.setVisibility(View.VISIBLE);
+							if (Integer.parseInt(hfInfoHead.getCount()) == hfList.size()) {
+								withoutmoretips.setText("没有更多评论了");
+							}else {
+								withoutmoretips.setText("查看更多评论");
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+					public void taskFailed() {
+					}
+				});
+				task1.execute(path1);
+
 			}
 		});
 		ftitle = (TextView) findViewById(R.id.fttitile);
@@ -152,19 +185,19 @@ public class TzIn extends Activity   {
 							String source = null;
 							try {
 								source = java.net.URLDecoder.decode(source1, "utf-8");
-								String s=source.substring(0, 4);
+								String s = source.substring(0, 4);
 								if (!s.equals("http")) {
 									source = "http://133.130.53.62" + source;
 								}
-								
+
 							} catch (UnsupportedEncodingException e1) {
 								e1.printStackTrace();
 							}
 							Log.i("RG", "url---?>>>" + source);
 							try {
 								Drawable drawable = new PictureTask().execute(source).get();
-								if (drawable==null) {
-									drawable=getResources().getDrawable(R.drawable.imagegetdefeat);
+								if (drawable == null) {
+									drawable = getResources().getDrawable(R.drawable.imagegetdefeat);
 								}
 								if (drawable.getIntrinsicWidth() > 50) {
 									drawable.setBounds(0, 0, screenwidth - 40, drawable.getIntrinsicHeight()
@@ -211,21 +244,23 @@ public class TzIn extends Activity   {
 
 		hflistview = (MyListView) findViewById(R.id.hflistview);
 		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
-				+ "&parse=2&order=asc&offset=" + offset + "&size=5";
+				+ "&parse=2&order=asc&offset=" + offset + "&size=3";
 		HttpTask task1 = new HttpTask();
 		task1.setTaskHandler(new HttpTaskHandler() {
 			public void taskSuccessful(String json) {
 				try {
 					hfInfoHead = JsonTools.getHfInfoHead(json);
 					hfList = JsonTools.getHfLists(json);
-					if (hfList.size() == 0) {
-						withoutmoretips.setVisibility(View.VISIBLE);
-					}
+
 					tzInfoAdapter = new TzInfoAdapter(hfList, getApplicationContext());
 					hflistview.setAdapter(tzInfoAdapter);
 					scview.smoothScrollTo(0, 0);
 					process2.setVisibility(View.GONE);
 					jiazaiing2.setVisibility(View.GONE);
+					withoutmoretips.setVisibility(View.VISIBLE);
+					if (Integer.parseInt(hfInfoHead.getCount()) == hfList.size()) {
+						withoutmoretips.setText("没有更多评论了");
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -236,6 +271,7 @@ public class TzIn extends Activity   {
 		});
 		task1.execute(path1);
 	}
+
 	// 注册广播
 	@Override
 	protected void onResume() {
@@ -256,84 +292,91 @@ public class TzIn extends Activity   {
 		}
 	}
 
-//	final Handler h = new Handler() {
-//		@Override
-//		public void handleMessage(Message msg) {
-//			if (msg.what == 0x123) {
-//				// show.setText(msg.obj.toString());
-//				editText.setText("");
-//				Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
-//			}
-//		}
-//	};
-//
-//	@Override
-//	public void onClick(View v) {
-//		switch (v.getId()) {
-//		case R.id.loadBtn:
-//			final String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
-//					+ "&parse=2&order=asc&offset=" + offset + "&size=5";
-//			HttpTask task1 = new HttpTask();
-//			task1.setTaskHandler(new HttpTaskHandler() {
-//				public void taskSuccessful(String json) {
-//					try {
-//						hfInfoHead = JsonTools.getHfInfoHead(json);
-//						// fnr.setMovementMethod(LinkMovementMethod.getInstance());
-//						if (hfInfoHead.getCount().equals(String.valueOf(hfList.size()))) {
-//							Toast.makeText(getApplicationContext(), "没有更多回复了", Toast.LENGTH_SHORT).show();
-//						} else {
-//							offset += 5; //
-//							String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + s
-//									+ "&parse=2&order=asc&offset=" + offset + "&size=5";
-//							HttpTask task12 = new HttpTask();
-//							task12.setTaskHandler(new HttpTaskHandler() {
-//								public void taskSuccessful(String json) {
-//									try {
-//										hfInfoHead = JsonTools.getHfInfoHead(json);
-//										List<HfList> hfList1 = JsonTools.getHfLists(json);
-//										hfList.addAll(hfList.size(), hfList1);
-//										tzInfoAdapter.notifyDataSetChanged();
-//										// fnr.setMovementMethod(LinkMovementMethod.getInstance());
-//									} catch (Exception e) {
-//										e.printStackTrace();
-//									}
-//								}
-//
-//								public void taskFailed() {
-//
-//								}
-//							});
-//							task12.execute(path1);
-//						}
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
-//
-//				public void taskFailed() {
-//				}
-//			});
-//			task1.execute(path1);
-//
-//			break;
-//		case R.id.hfbtn:
-//			try {
-//				tznr = java.net.URLEncoder.encode(editText.getText().toString(), "utf-8");
-//			} catch (UnsupportedEncodingException e) { // TODO Auto-generated
-//														// catch block
-//				e.printStackTrace();
-//			}
-//			if (tznr.equals("")) {
-//				Toast.makeText(this, "回复不能为空", Toast.LENGTH_SHORT).show();
-//			} else {
-//				new Thread(new AccessNetwork("POST", "http://133.130.53.62/wap/read.php?id=bbs_xiehf",
-//						"tzid=" + tzid + "&bkid=" + bkid + "&sid=1zed8Kg5izHg5mm-RW9VcNciMAAA&nr=" + tznr
-//								+ "&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D",
-//						h)).start();
-//			}
-//			break;
-//		}
-//	}
+	// final Handler h = new Handler() {
+	// @Override
+	// public void handleMessage(Message msg) {
+	// if (msg.what == 0x123) {
+	// // show.setText(msg.obj.toString());
+	// editText.setText("");
+	// Toast.makeText(getApplicationContext(), msg.obj.toString(),
+	// Toast.LENGTH_SHORT).show();
+	// }
+	// }
+	// };
+	//
+	// @Override
+	// public void onClick(View v) {
+	// switch (v.getId()) {
+	// case R.id.loadBtn:
+	// final String path1 =
+	// "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
+	// + "&parse=2&order=asc&offset=" + offset + "&size=5";
+	// HttpTask task1 = new HttpTask();
+	// task1.setTaskHandler(new HttpTaskHandler() {
+	// public void taskSuccessful(String json) {
+	// try {
+	// hfInfoHead = JsonTools.getHfInfoHead(json);
+	// // fnr.setMovementMethod(LinkMovementMethod.getInstance());
+	// if (hfInfoHead.getCount().equals(String.valueOf(hfList.size()))) {
+	// Toast.makeText(getApplicationContext(), "没有更多回复了",
+	// Toast.LENGTH_SHORT).show();
+	// } else {
+	// offset += 5; //
+	// String path1 =
+	// "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + s
+	// + "&parse=2&order=asc&offset=" + offset + "&size=5";
+	// HttpTask task12 = new HttpTask();
+	// task12.setTaskHandler(new HttpTaskHandler() {
+	// public void taskSuccessful(String json) {
+	// try {
+	// hfInfoHead = JsonTools.getHfInfoHead(json);
+	// List<HfList> hfList1 = JsonTools.getHfLists(json);
+	// hfList.addAll(hfList.size(), hfList1);
+	// tzInfoAdapter.notifyDataSetChanged();
+	// // fnr.setMovementMethod(LinkMovementMethod.getInstance());
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	// }
+	//
+	// public void taskFailed() {
+	//
+	// }
+	// });
+	// task12.execute(path1);
+	// }
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	// }
+	//
+	// public void taskFailed() {
+	// }
+	// });
+	// task1.execute(path1);
+	//
+	// break;
+	// case R.id.hfbtn:
+	// try {
+	// tznr = java.net.URLEncoder.encode(editText.getText().toString(),
+	// "utf-8");
+	// } catch (UnsupportedEncodingException e) { // TODO Auto-generated
+	// // catch block
+	// e.printStackTrace();
+	// }
+	// if (tznr.equals("")) {
+	// Toast.makeText(this, "回复不能为空", Toast.LENGTH_SHORT).show();
+	// } else {
+	// new Thread(new AccessNetwork("POST",
+	// "http://133.130.53.62/wap/read.php?id=bbs_xiehf",
+	// "tzid=" + tzid + "&bkid=" + bkid +
+	// "&sid=1zed8Kg5izHg5mm-RW9VcNciMAAA&nr=" + tznr
+	// + "&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D",
+	// h)).start();
+	// }
+	// break;
+	// }
+	// }
 
 	public static void extractMention2Link(TextView v) {
 		v.setAutoLinkMask(0);

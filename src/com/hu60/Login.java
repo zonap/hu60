@@ -9,9 +9,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -30,6 +33,8 @@ public class Login extends Activity implements OnClickListener {
 	String s;
 	private NotificationManager notificationManager;// 提醒用户网络异常
 	private ConnectivityManager cmanager;
+	private SharedPreferences sharedPreferences;
+	private Editor editor;
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
 
 		@Override
@@ -57,24 +62,30 @@ public class Login extends Activity implements OnClickListener {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
-		cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		etName = (EditText) findViewById(R.id.editText1);
-		etPw = (EditText) findViewById(R.id.editText2);
-		logiBtn = (Button) findViewById(R.id.button1);
-		logiBtn.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				Intent i = new Intent(Login.this, Main.class);
-				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-				startActivity(i);
-			}
-		}
-		// this
-		);
-
+		sharedPreferences = getSharedPreferences("loginsid", Context.MODE_PRIVATE);
+		editor = sharedPreferences.edit();
+		if (sharedPreferences.getString("sid", null) != null) {
+			Log.i("Sid", sharedPreferences.getString("sid", "null"));
+			startActivity(new Intent(Login.this, Main.class));
+			
+		} 
+			cmanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+			notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			etName = (EditText) findViewById(R.id.editText1);
+			etPw = (EditText) findViewById(R.id.editText2);
+			logiBtn = (Button) findViewById(R.id.button1);
+			logiBtn.setOnClickListener(this);
+	
+		// new OnClickListener() {
+		//
+		// @Override
+		// public void onClick(View v) {
+		// // TODO Auto-generated method stub
+		// Intent i = new Intent(Login.this, Main.class);
+		// i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		// startActivity(i);
+		// }
+		// }
 	}
 
 	// 注册广播
@@ -106,7 +117,6 @@ public class Login extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		Toast.makeText(this, "kaishi", Toast.LENGTH_SHORT).show();
 		logiBtn.setClickable(false);
 		String name = null, pw = null;
 		try {
@@ -121,14 +131,21 @@ public class Login extends Activity implements OnClickListener {
 				try {
 					User user = JsonTools.getUser(json);
 					if (user.getErrmsg().equals("登陆成功")) {
-						Toast.makeText(Login.this, "陈宫", Toast.LENGTH_SHORT).show();
+						editor.putString("sid", user.getSid());
+						if (editor.commit()) {
+							Toast.makeText(Login.this, "SID记录成功", Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(Login.this, "SID记录成功", Toast.LENGTH_SHORT).show();
+						}
 						Intent i = new Intent(Login.this, Main.class);
+						i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 						Bundle mBundle = new Bundle();
 						mBundle.putSerializable("account", user);
+
 						i.putExtras(mBundle);
 						startActivity(i);
 					} else {
-						Toast.makeText(Login.this, "失败", Toast.LENGTH_SHORT).show();
+						Toast.makeText(Login.this, "登录失败", Toast.LENGTH_SHORT).show();
 						logiBtn.setClickable(true);
 					}
 

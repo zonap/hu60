@@ -25,6 +25,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -42,10 +44,15 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class TzIn extends Activity {
 	private TextView ftime, hcount, rcount, ftitle, fnr, ftname;
@@ -61,9 +68,13 @@ public class TzIn extends Activity {
 	// private Button hfbtn;
 	ImageGetter imgGetter;
 	private int screenwidth;
+	private LinearLayout sendmessage;
+	private EditText message;
+	private Button send;
 	private ProgressBar process, process2;
 	private TextView jiazaiing, jiazaiing2, withoutmoretips;
 	private ScrollView scview;
+	private SharedPreferences sharedPreferences;
 	private LinearLayout linearLayout;
 	private NotificationManager notificationManager;// 提醒用户网络异常
 	private ConnectivityManager cmanager;
@@ -99,25 +110,67 @@ public class TzIn extends Activity {
 		DisplayMetrics mDisplayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
 		screenwidth = mDisplayMetrics.widthPixels;
+
+		send = (Button) findViewById(R.id.send);
+		send.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+
+				sharedPreferences = getSharedPreferences("loginsid", Context.MODE_PRIVATE);
+				try {
+					tznr = java.net.URLEncoder.encode(message.getText().toString(), "utf-8");
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (sharedPreferences.getString("sid", null) != null && !tznr.equals("")) {
+					String path = "tzid=" + tzid + "&bkid=" + bkid + "&sid=" + sharedPreferences.getString("sid", null)
+							+ "&nr=" + tznr + "&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D";
+					Log.i("pathsend", path);
+					new Thread(new AccessNetwork("POST", "http://133.130.53.62/wap/read.php?id=bbs_xiehf", path, h))
+							.start();
+					Log.i("tzinsid", sharedPreferences.getString("sid", "null"));
+					sendmessage.setVisibility(View.GONE);
+				} else {
+				}
+
+			}
+		});
+		message = (EditText) findViewById(R.id.message);
 		scview = (ScrollView) findViewById(R.id.buuju);
+		sendmessage = (LinearLayout) findViewById(R.id.sendmessage);
 		linearLayout = (LinearLayout) findViewById(R.id.buju1);
 		process = (ProgressBar) findViewById(R.id.progressBar1);
 		jiazaiing = (TextView) findViewById(R.id.jiazaiing);
 		process2 = (ProgressBar) findViewById(R.id.progressBar2);
 		jiazaiing2 = (TextView) findViewById(R.id.jiazaiing2);
 		withoutmoretips = (TextView) findViewById(R.id.withoutmoretips);
+		linearLayout.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				sendmessage.setVisibility(View.VISIBLE);
+				message.append("@"+ftname.getText().toString() + ",");
+			}
+		});
 		withoutmoretips.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				withoutmoretips.setText("加载中");
 				// TODO Auto-generated method stub
-				if (offset == 0) {
-					offset += 3;
-				} else
-					offset += 10;
+//				if (offset < hfList.size() - 1) {
+//					offset = hfList.size() - 1;
+//				}
+//				if (offset == 0) {
+//					offset += 3;
+//				} else
+//					offset += 10;
 				String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
-						+ "&parse=2&order=asc&offset=" + offset + "&size=10";
+						+ "&parse=2&order=asc&offset=" + hfList.size() + "&size=10";
 				Log.i("path", path1);
 				HttpTask task1 = new HttpTask();
 				task1.setTaskHandler(new HttpTaskHandler() {
@@ -133,7 +186,7 @@ public class TzIn extends Activity {
 							withoutmoretips.setVisibility(View.VISIBLE);
 							if (Integer.parseInt(hfInfoHead.getCount()) == hfList.size()) {
 								withoutmoretips.setText("没有更多评论了");
-							}else {
+							} else {
 								withoutmoretips.setText("查看更多评论");
 							}
 						} catch (Exception e) {
@@ -243,6 +296,15 @@ public class TzIn extends Activity {
 		task.execute(path);
 
 		hflistview = (MyListView) findViewById(R.id.hflistview);
+		hflistview.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				// TODO Auto-generated method stub
+				sendmessage.setVisibility(View.VISIBLE);
+				message.append("@"+hfList.get(position).getUname() + ",");
+			}
+		});
 		String path1 = "http://133.130.53.62/wap/0wap/m.php/api.bbs.json?type=hf&tzid=" + tzid
 				+ "&parse=2&order=asc&offset=" + offset + "&size=3";
 		HttpTask task1 = new HttpTask();
@@ -292,17 +354,16 @@ public class TzIn extends Activity {
 		}
 	}
 
-	// final Handler h = new Handler() {
-	// @Override
-	// public void handleMessage(Message msg) {
-	// if (msg.what == 0x123) {
-	// // show.setText(msg.obj.toString());
-	// editText.setText("");
-	// Toast.makeText(getApplicationContext(), msg.obj.toString(),
-	// Toast.LENGTH_SHORT).show();
-	// }
-	// }
-	// };
+	final Handler h = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			if (msg.what == 0x123) {
+				// show.setText(msg.obj.toString());
+				send.setText("");
+				Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
+			}
+		}
+	};
 	//
 	// @Override
 	// public void onClick(View v) {

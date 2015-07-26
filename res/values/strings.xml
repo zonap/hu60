@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Hu601</string>
+    <string name="app_name">虎绿林</string>
     <string name="hello_world">Hello world!</string>
     <string name="tv1">TextView</string>
     <!-- 自定义组件 -->

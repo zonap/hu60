@@ -162,6 +162,29 @@
                 android:textColor="#009983"
                 android:textSize="15sp"
                 android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/sendmessage"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:background="#009983"
+                android:orientation="horizontal"
+                android:visibility="gone" >
+
+                <EditText
+                    android:id="@+id/message"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:singleLine="false" />
+
+                <Button
+                    android:id="@+id/send"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="发送" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

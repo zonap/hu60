@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NativeHTTPUtil {
-	private NativeHTTPUtil() {
-	}
 
 	/**
 	 * 发送HTTP_POST请求
@@ -116,15 +114,71 @@ public class NativeHTTPUtil {
 		return sendPostRequest(reqURL, sendData.toString());
 	}
 
-	public static void main(String[] args) throws UnsupportedEncodingException {
-		Map<String, String> params = new HashMap<String, String>();
-		// tzid=74737&bkid=27&sid=NXYFGMuXMIvFQQf6khheu6ciMAAA&nr=eeee&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D
-		// params.put("tzid", "74737");
-		// params.put("bkid", "27");
-		// params.put("sid", "NXYFGMuXMIvFQQf6khheu6ciMAAA");
-		// params.put("nr", "eeee");
-		// params.put("go", "%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D");
-		// System.out.println(sendPostRequest("http://133.130.53.62/wap/read.php?id=bbs_xiehf",
-		// params));
+	/***
+	 * 
+	 * @param url
+	 *            get请求的完整网络路径地址
+	 * @return String 请求得到的inputStream转化为字符串
+	 */
+	public static String sendGetRequest(String url) {
+		HttpURLConnection httpURLConnection = null;
+		InputStream in = null;
+		int responseCode = 0;
+		try {
+			URL sendURL = new URL(url);
+			httpURLConnection = (HttpURLConnection) sendURL.openConnection();
+			httpURLConnection.setRequestMethod("GET");
+			httpURLConnection.setDoOutput(true);
+			httpURLConnection.setUseCaches(false);
+			httpURLConnection.setConnectTimeout(30000);
+			httpURLConnection.setReadTimeout(30000);
+
+			httpURLConnection.connect();
+			responseCode = httpURLConnection.getResponseCode();
+			in = httpURLConnection.getInputStream();
+			byte[] byteDatas = new byte[in.available()];
+			in.read(byteDatas);
+			String s = new String(byteDatas, "UTF-8");
+			return responseCode + "`" + new String(s);
+
+		} catch (Exception e) {
+			System.out.println("与[" + url + "]通信异常,堆栈信息为");
+			e.printStackTrace();
+			return responseCode + "`" + "Failed`";
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (Exception e) {
+					System.out.println("关闭输入流时发生异常,堆栈信息如下");
+					e.printStackTrace();
+				}
+			}
+			if (httpURLConnection != null) {
+				httpURLConnection.disconnect();
+				httpURLConnection = null;
+			}
+		}
+
 	}
+	/**
+	 * 方法使用范例
+	 */
+	// public static void main(String[] args) throws
+	// UnsupportedEncodingException {
+	// Map<String, String> params = new HashMap<String, String>();
+	// tzid=74737&bkid=27&sid=NXYFGMuXMIvFQQf6khheu6ciMAAA&nr=eeee&go=%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D
+	// params.put("tzid", "74737");
+	// params.put("bkid", "27");
+	// params.put("sid", "NXYFGMuXMIvFQQf6khheu6ciMAAA");
+	// params.put("nr", "eeee");
+	// params.put("go", "%E5%BF%AB%E9%80%9F%E5%9B%9E%E5%A4%8D");
+	// System.out.println(sendPostRequest("http://133.130.53.62/wap/read.php?id=bbs_xiehf",
+	// params));
+	// }
+	// public static void main(String args[]){
+	// String
+	// url="http://133.130.53.62/wap/0wap/m.php/api.chat.json?type=chat&name=%E5%85%AC%E5%85%B1%E8%81%8A%E5%A4%A9%E5%AE%A4";
+	// System.out.println(sendGetRequest(url));
+	// }
 }

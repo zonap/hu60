@@ -1,6 +1,8 @@
 package com.tools;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -57,10 +59,14 @@ public class NativeHTTPUtil {
 			// }
 			// br.close();
 			in = httpURLConnection.getInputStream();
-			byte[] byteDatas = new byte[in.available()];
-			in.read(byteDatas);
-			String s = new String(byteDatas, "UTF-8");
-			return responseCode + "`" + new String(s);
+			BufferedReader bf = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			// 最好在将字节流转换为字符流的时候 进行转码
+			StringBuffer buffer = new StringBuffer();
+			String line = "";
+			while ((line = bf.readLine()) != null) {
+				buffer.append(line);
+			}
+			return responseCode + "`" + buffer.toString();
 
 		} catch (Exception e) {
 			System.out.println("与[" + reqURL + "]通信异常,堆栈信息为");
@@ -136,10 +142,14 @@ public class NativeHTTPUtil {
 			httpURLConnection.connect();
 			responseCode = httpURLConnection.getResponseCode();
 			in = httpURLConnection.getInputStream();
-			byte[] byteDatas = new byte[in.available()];
-			in.read(byteDatas);
-			String s = new String(byteDatas, "UTF-8");
-			return responseCode + "`" + new String(s);
+			BufferedReader bf = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+			// 最好在将字节流转换为字符流的时候 进行转码
+			StringBuffer buffer = new StringBuffer();
+			String line = "";
+			while ((line = bf.readLine()) != null) {
+				buffer.append(line);
+			}
+			return responseCode + "`" + buffer.toString();
 
 		} catch (Exception e) {
 			System.out.println("与[" + url + "]通信异常,堆栈信息为");
